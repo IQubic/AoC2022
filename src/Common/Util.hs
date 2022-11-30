@@ -142,11 +142,11 @@ fixPointLength = go 1
 
 -- | Counts the number of times each element appears in a given foldable.
 freqs :: (Foldable t, Ord a) => t a -> Map a Int
-freqs = foldr (\val m -> M.insertWith (+) val 1 m) M.empty
+freqs = foldl' (\m val -> M.insertWith (+) val 1 m) M.empty
 
 -- | Counts the number of times each Int appears in a given foldable.
 intFreqs :: Foldable t => t Int-> IntMap Int
-intFreqs = foldr (\val m -> IM.insertWith (+) val 1 m) IM.empty
+intFreqs = foldl' (\m val -> IM.insertWith (+) val 1 m) IM.empty
 
 -- | Finds all the ways to select one element from a list
 -- Returns the selected value and list of the other values
