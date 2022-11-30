@@ -36,7 +36,7 @@ coerceParseResult = either (error . errorBundlePretty) id
 -- | Parser for comma separated list of data.
 -- | Consumes whitespace between elements
 commaSep :: Parser a -> Parser [a]
-commaSep p = p `sepBy` (char ',' *> hspace)
+commaSep p = p `sepBy1` (char ',' *> hspace)
 
 -- | Parser for a possibly signed number of one or more digits.
 -- | Consumes all whitespace before the number
