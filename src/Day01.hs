@@ -23,7 +23,7 @@ part2 = sum
       . parseInput
 
 parseInput :: String -> [[Int]]
-parseInput = parseAll $ pElf `sepBy1` eol
+parseInput = parseAll $ pElf `sepEndBy1` eol
   where
     pElf = number `endBy1` eol
 

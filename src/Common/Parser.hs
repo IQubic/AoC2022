@@ -20,13 +20,13 @@ type ParserResult = Either (ParseErrorBundle String Void)
 -- Calls @error@ on a parse error.
 parseAll :: Parser a -> String -> a
 parseAll p input = coerceParseResult
-                 $ runParser (p <* optional eol <* eof) "" input
+                 $ runParser (p <* eof) "" input
 
 -- | Parser for all lines. Runs a given parser on each line.
 -- Requires that the user DOES NOT consume newlines.
 -- Calls @error@ on a parse error.
 parseLines :: Parser a -> String -> [a]
-parseLines p = parseAll (p `endBy` optional eol)
+parseLines p = parseAll (p `endBy`eol)
 
 -- | Coerce a @ParseResult a@ into an a.
 -- Calls @error@ if the @ParserResult a@ is in an error state.
