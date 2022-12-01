@@ -46,23 +46,23 @@ countIf p = lengthOf (folded . filtered p)
 
 -- | Computes the sum of all the elements that satisfy a given predicate.
 sumIf :: (Foldable t, Num a) => (a -> Bool) -> t a -> a
-sumIf = foldMapWithIf (coerced :: Iso' a (Sum a))
+sumIf = foldMapIf (coerced :: Iso' a (Sum a))
 -- | Computes the product of all the elements that satisfy a given predicate.
 productIf :: (Foldable t, Num a) => (a -> Bool) -> t a -> a
-productIf = foldMapWithIf (coerced :: Iso' a (Product a))
+productIf = foldMapIf (coerced :: Iso' a (Product a))
 
 -- | Mappends all elements that satisfy a predicate
 foldIf :: (Foldable t, Monoid m) => (m -> Bool) -> t m -> m
-foldIf = foldMapWithIf id
+foldIf = foldMapIf id
 
 -- | Mappends all elements that satisfy a predicate
 -- Uses an iso to create the monoid
-foldMapWithIf :: (Foldable t, Monoid m)
+foldMapIf :: (Foldable t, Monoid m)
            => Iso' a m
            -> (a -> Bool)
            -> t a
            -> a
-foldMapWithIf _monoided p xs =
+foldMapIf _monoided p xs =
   _monoided # foldOf (folded . filtered p . _monoided) xs
 
 -- | Converts a given sequence of digits from base @n@ to base @10@
