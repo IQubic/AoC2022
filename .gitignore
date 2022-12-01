@@ -1,5 +1,4 @@
 dist-*
 .direnv
 .envrc
-template
 src/Common/Runner.hs
