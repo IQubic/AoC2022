@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module Day02 where
 
 import Common.Runner
