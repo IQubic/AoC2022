@@ -1,69 +1,53 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE DataKinds #-}
 
 module Day02 where
 
 import Common.Runner
 import Common.Parser
+import Data.Finite
 import Data.Foldable (asum)
 
-part1 :: String -> Int
-part1 = getAns outcome
+-- Second column gives shape we throw
+-- me + 2 = opp -> L (0)
+-- me + 0 = opp -> D (1)
+-- me + 1 = opp -> W (2)
+part1 :: String -> Integer
+part1 = getAns (\_ me -> me) (\opp me -> (me - opp) + 1)
+
+-- Second column gives result
+-- L (0) -> opp + 2
+-- D (1) -> opp + 0
+-- W (2) -> opp + 1
+part2 :: String -> Integer
+part2 = getAns (\opp res -> opp + (res - 1)) (\_ res -> res)
+
+-- R = 0, P = 1, S = 2
+-- L = 0, W = 1, D = 2
+getAns :: (Finite 3 -> Finite 3 -> Finite 3)
+       -> (Finite 3 -> Finite 3 -> Finite 3)
+       -> String -> Integer
+getAns shapeVal resVal = sum
+                       . map score
+                       . parseInput
   where
-    outcome :: Round -> (Shape, Outcome)
-    outcome (Rock,     'X') = (Rock,     Draw)
-    outcome (Rock,     'Y') = (Paper,    Win)
-    outcome (Rock,     'Z') = (Scissors, Lose)
-    outcome (Paper,    'X') = (Rock,     Lose)
-    outcome (Paper,    'Y') = (Paper,    Draw)
-    outcome (Paper,    'Z') = (Scissors, Win)
-    outcome (Scissors, 'X') = (Rock,     Win)
-    outcome (Scissors, 'Y') = (Paper,    Lose)
-    outcome (Scissors, 'Z') = (Scissors, Draw)
-    outcome _ = error "Impossible"
-
-part2 :: String -> Int
-part2 = getAns outcome
-  where
-    outcome :: Round -> (Shape, Outcome)
-    outcome (Rock,     'X') = (Scissors, Lose)
-    outcome (Rock,     'Y') = (Rock,     Draw)
-    outcome (Rock,     'Z') = (Paper,    Win)
-    outcome (Paper,    'X') = (Rock,     Lose)
-    outcome (Paper,    'Y') = (Paper,    Draw)
-    outcome (Paper,    'Z') = (Scissors, Win)
-    outcome (Scissors, 'X') = (Paper,    Lose)
-    outcome (Scissors, 'Y') = (Scissors, Draw)
-    outcome (Scissors, 'Z') = (Rock,     Win)
-    outcome _ = error "Impossible"
+    score :: (Finite 3, Finite 3) -> Integer
+    -- Plus 1 to shapeVal because 0-2 isn't 1-3
+    score (opp, me) = getFinite (shapeVal opp me) + 1
+                    + 3 * getFinite (resVal opp me)
 
 
-
-getAns :: (Round -> (Shape, Outcome)) -> String -> Int
-getAns outcome = sum
-               . map (score . outcome)
-               . parseInput
-  where
-    score (shape, res) = shapeVal shape + resVal res
-    shapeVal Rock     = 1
-    shapeVal Paper    = 2
-    shapeVal Scissors = 3
-    resVal   Lose     = 0
-    resVal   Draw     = 3
-    resVal   Win      = 6
-
-data Shape   = Rock | Paper | Scissors
-data Outcome = Lose | Draw  | Win
-type Round = (Shape, Char)
-
-
-parseInput :: String -> [Round]
+parseInput :: String -> [(Finite 3, Finite 3)]
 parseInput = parseLines $ do
   you <- pShape <* char ' '
-  (you,) <$> anySingle
+  (you,) <$> pShape
   where
-    pShape = asum [ char 'A' $> Rock
-                  , char 'B' $> Paper
-                  , char 'C' $> Scissors
+    pShape = asum [ char 'A' $> finite 0
+                  , char 'B' $> finite 1
+                  , char 'C' $> finite 2
+                  , char 'X' $> finite 0
+                  , char 'Y' $> finite 1
+                  , char 'Z' $> finite 2
                   ]
 
 solve :: Show a => (String -> a) -> IO (Either AoCError a)
