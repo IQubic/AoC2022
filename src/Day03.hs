@@ -4,27 +4,24 @@ module Day03 where
 
 import Common.Runner
 import Common.Parser
+import Control.Arrow (first)
+import Data.Bifoldable (biList)
 import Data.List.Split
 import Data.Char
 import Data.Set (Set)
 import Data.Set qualified as S
-import Data.Bifunctor (bimap)
 
 part1 :: String -> Int
 part1 = sum
-      . map (setScore . mkBag)
+      . map (setScore . biList . splitHalf)
       . lines
       where
-        bagScore :: (Set Char, Set Char) -> Int
-        bagScore (xs, ys) = letterScore $ head $ S.toList $ S.intersection xs ys
-        mkBag :: String -> [String]
-        mkBag bag = let (xs, ys) = splitBag bag
-                        in [xs, ys]
-        splitBag :: String -> (String, String)
-        splitBag xs = splitAt half xs
+        -- Tortoise and Hare
+        splitHalf :: [a] -> ([a],[a])
+        splitHalf xs = go xs xs
           where
-            half = length xs `div` 2
-
+            go (y:ys) (_:_:zs) = first (y:) (go ys zs)
+            go ys _ = ([], ys)
 
 part2 :: String -> Int
 part2 = sum
@@ -32,24 +29,20 @@ part2 = sum
       . chunksOf 3
       . lines
 
+-- Find the letter that's present in all strings given
+-- then calc the score of that letter
+-- head . S.toList is safe because there's only one match
 setScore :: [String] -> Int
 setScore = letterScore
          . head
          . S.toList
          . foldl1 S.intersection
          . map S.fromList
-
-letterScore :: Char -> Int
-letterScore c = if isUpper c
-                   then ord c - 38
-                   else ord c - 96
-
--- parseInput :: String -> [Rucksack]
--- parseInput = map (bimap S.fromList S.fromList . _)
---            . lines
---   where
---     mkRucksack :: String -> String -> (String, String)
---     mkRucksack = undefined
+  where
+    letterScore :: Char -> Int
+    letterScore c = if isLower c
+                       then ord c - ord 'a' + 1
+                       else ord c - ord 'A' + 27
 
 solve :: Show a => (String -> a) -> IO (Either AoCError a)
 solve = runSolutionOnInput 3
