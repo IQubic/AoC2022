@@ -6,7 +6,7 @@ module Day04 where
 import Common.Runner
 import Common.Parser
 import Common.Util (countIf)
-import Data.IntegerInterval (IntegerInterval)
+import Data.IntegerInterval (IntegerInterval, (<=..<=))
 import Data.IntegerInterval qualified as I
 
 part1 :: String -> Int
@@ -32,7 +32,7 @@ parseInput = parseLines $ do
       pRange = do
         first <- number <* char '-'
         second <- number
-        pure $ I.Finite first I.<=..<= I.Finite second
+        pure $ I.Finite first <=..<= I.Finite second
 
 solve :: Show a => (String -> a) -> IO (Either AoCError a)
 solve = runSolutionOnInput 4
