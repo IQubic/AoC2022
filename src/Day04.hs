@@ -6,31 +6,33 @@ module Day04 where
 import Common.Runner
 import Common.Parser
 import Common.Util (countIf)
-import Data.IntSet (IntSet)
-import Data.IntSet qualified as IS
-
+import Data.IntegerInterval (IntegerInterval)
+import Data.IntegerInterval qualified as I
 
 part1 :: String -> Int
-part1 = countIf (uncurry valid)
-      . parseInput
+part1 = getAns overlap
   where
-    valid r1 r2 = r1 `IS.isSubsetOf` r2 || r2 `IS.isSubsetOf` r1
+    overlap r1 r2 = r1 `I.isSubsetOf` r2 || r2 `I.isSubsetOf` r1
 
 part2 :: String -> Int
-part2 = countIf (\(x, y) -> not $ IS.disjoint x y)
-      . parseInput
+part2 = getAns (I.==?)
 
-parseInput :: String -> [(IntSet, IntSet)]
+getAns :: (IntegerInterval -> IntegerInterval -> Bool)
+       -> String
+       -> Int
+getAns p = countIf (uncurry p)
+         . parseInput
+
+parseInput :: String -> [(IntegerInterval, IntegerInterval)]
 parseInput = parseLines $ do
   first <- pRange <* char ','
-  second <- pRange
-  pure (first, second)
+  (first,) <$> pRange
     where
-      pRange :: Parser IntSet
+      pRange :: Parser IntegerInterval
       pRange = do
         first <- number <* char '-'
         second <- number
-        pure $ IS.fromList [first..second]
+        pure $ I.Finite first I.<=..<= I.Finite second
 
 solve :: Show a => (String -> a) -> IO (Either AoCError a)
 solve = runSolutionOnInput 4
