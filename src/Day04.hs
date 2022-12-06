@@ -20,8 +20,7 @@ part2 = getAns (I.==?)
 getAns :: (IntegerInterval -> IntegerInterval -> Bool)
        -> String
        -> Int
-getAns p = countIf (uncurry p)
-         . parseInput
+getAns p = countIf (uncurry p) . pInput
 
 pInput :: String -> [(IntegerInterval, IntegerInterval)]
 pInput = pLines $ do
