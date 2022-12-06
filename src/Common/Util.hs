@@ -65,6 +65,10 @@ foldMapIf :: (Foldable t, Monoid m)
 foldMapIf _monoided p xs =
   _monoided # foldOf (folded . filtered p . _monoided) xs
 
+-- | Finds the first index where the predicate is True
+-- indexOf :: Foldable f => (a -> Bool) -> f a -> Maybe Int
+-- indexOf xs p = xs ^? ifolded . (filtered f) . asIndex
+
 -- | Converts a given sequence of digits from base @n@ to base @10@
 baseConvert :: (Num n, Foldable f) => n -> f n -> n
 baseConvert base = foldl' (\acc b -> base * acc + b) 0
@@ -103,6 +107,14 @@ slidingWindow n (x:xs) =
 -- | Checks if all elements are equal.
 same :: (Foldable t, Eq a) => t a -> Bool
 same xs = all (head (toList xs) ==) xs
+
+-- | Checks if all elements are different.
+allDiff :: (Foldable t, Eq a) => t a -> Bool
+allDiff = all headDiff . tails . toList
+  where
+    -- Is head different to everthing
+    headDiff []     = True
+    headDiff (x:xs) = x `notElem` xs
 
 -- | Finds all the configurations where each @k@ is given a different @a@
 pickUnique :: forall k a. (Ord k, Ord a) => Map k (Set a) -> [Map k a]
