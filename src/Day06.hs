@@ -3,7 +3,7 @@ module Day06 where
 import Common.Runner
 import Common.Parser
 import Data.Maybe (fromJust)
-import Common.Util (slidingWindow, indexWhere, allDiff)
+import Common.Util (slidingWindow, indexWhere, uniq)
 
 part1 :: String -> Int
 part1 = getAns 4
@@ -16,7 +16,7 @@ part2 = getAns 14
 getAns :: Int -> String -> Int
 getAns n = (+n)
          . head
-         . indexWhere allDiff
+         . indexWhere uniq
          . slidingWindow n
 
 solve :: Show a => (String -> a) -> IO (Either AoCError a)

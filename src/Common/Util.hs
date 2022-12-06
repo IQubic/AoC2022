@@ -109,8 +109,8 @@ same :: (Foldable t, Eq a) => t a -> Bool
 same xs = all (head (toList xs) ==) xs
 
 -- | Checks if all elements are different.
-allDiff :: (Foldable t, Eq a) => t a -> Bool
-allDiff = all headDiff . tails . toList
+uniq :: (Foldable t, Eq a) => t a -> Bool
+uniq = all headDiff . tails . toList
   where
     -- Is head different to everthing
     headDiff []     = True
