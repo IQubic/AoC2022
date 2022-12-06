@@ -63,8 +63,8 @@ data Dir = North | East | South | West
   deriving (Show, Eq, Ord, Enum)
 
 -- | Enumeration of the directions
-allDir :: [Dir]
-allDir = [North ..]
+allDirs :: [Dir]
+allDirs = [North ..]
 
 -- | Gets the basis vector for a given direction
 -- North is (0,1) here
@@ -135,7 +135,7 @@ data D4 = D4 { d4Rot :: !Dir, d4Flip :: !Bool }
 
 -- | Enumeration of the D4 values
 allD4 :: [D4]
-allD4 = D4 <$> allDir <*> [False, True]
+allD4 = D4 <$> allDirs <*> [False, True]
 
 -- This is left to right composition of D4s
 instance Semigroup D4 where
