@@ -13,7 +13,7 @@ import Data.Set qualified as S
 
 part1 :: String -> Int
 part1 = sum
-      . map (setScore . biList . splitHalf)
+      . map (getScore . biList . splitHalf)
       . lines
       where
         -- Tortoise and Hare
@@ -25,15 +25,15 @@ part1 = sum
 
 part2 :: String -> Int
 part2 = sum
-      . map setScore
+      . map getScore
       . chunksOf 3
       . lines
 
 -- Find the letter that's present in all strings given
 -- then calc the score of that letter
 -- head . S.toList is safe because there's only one match
-setScore :: [String] -> Int
-setScore = letterScore
+getScore :: [String] -> Int
+getScore = letterScore
          . head
          . S.toList
          . foldl1 S.intersection

@@ -10,7 +10,7 @@ import Data.Ord (Down(..))
 part1 :: String -> Int
 part1 = maximum
       . map sum
-      . parseInput
+      . pInput
 
 -- For each reindeer, sum the number of calories
 -- then sortOn Down to get the largest first,
@@ -20,12 +20,12 @@ part2 = sum
       . take 3
       . sortOn Down
       . map sum
-      . parseInput
+      . pInput
 
-parseInput :: String -> [[Int]]
-parseInput = parseAll $ pElf `sepEndBy1` eol
+pInput :: String -> [[Int]]
+pInput = pAll $ pElf `sepEndBy1` eol
   where
-    pElf = number `endBy1` eol
+    pElf = pNumber `endBy1` eol
 
 solve :: Show a => (String -> a) -> IO (Either AoCError a)
 solve = runSolutionOnInput 1

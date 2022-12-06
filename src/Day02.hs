@@ -29,7 +29,7 @@ getAns :: (Finite 3 -> Finite 3 -> Finite 3)
        -> String -> Integer
 getAns shapeVal resVal = sum
                        . map score
-                       . parseInput
+                       . pInput
   where
     score :: (Finite 3, Finite 3) -> Integer
     -- Plus 1 to shapeVal because 0-2 isn't 1-3
@@ -37,8 +37,8 @@ getAns shapeVal resVal = sum
                     + 3 * getFinite (resVal opp me)
 
 
-parseInput :: String -> [(Finite 3, Finite 3)]
-parseInput = parseLines $ do
+pInput :: String -> [(Finite 3, Finite 3)]
+pInput = pLines $ do
   you <- pShape <* char ' '
   (you,) <$> pShape
   where

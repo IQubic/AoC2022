@@ -16,22 +16,27 @@ import Data.Void
 type Parser       = Parsec Void String
 type ParserResult = Either (ParseErrorBundle String Void)
 
+-- | Coerce a @ParseResult a@ into an a.
+-- Calls @error@ if the @ParserResult a@ is in an error state.
+coerceParseResult :: ParserResult a -> a
+coerceParseResult = either (error . errorBundlePretty) id
+
 -- | Parser for entire input. Requires user to consume all whitespace
 -- Calls @error@ on a parse error.
-parseAll :: Parser a -> String -> a
-parseAll p input = coerceParseResult
+pAll :: Parser a -> String -> a
+pAll p input = coerceParseResult
                  $ runParser (p <* eof) "" input
 
 -- | Parser for all lines. Runs a given parser on each line.
 -- Requires that the user DOES NOT consume newlines.
 -- Calls @error@ on a parse error.
-parseLines :: Parser a -> String -> [a]
-parseLines p = parseAll (p `endBy`eol)
+pLines :: Parser a -> String -> [a]
+pLines p = pAll (p `endBy`eol)
 
--- | Coerce a @ParseResult a@ into an a.
--- Calls @error@ if the @ParserResult a@ is in an error state.
-coerceParseResult :: ParserResult a -> a
-coerceParseResult = either (error . errorBundlePretty) id
+-- | Parser for a single line.
+-- Requires that the user DOES NOT consume the newline.
+pLine :: Parser a -> Parser a
+pLine p = p <* eol
 
 -- | Parser for comma separated list of data.
 -- | Consumes whitespace between elements
@@ -40,8 +45,8 @@ commaSep p = p `sepBy1` (char ',' *> hspace)
 
 -- | Parser for a possibly signed number of one or more digits.
 -- | Consumes all whitespace before the number
-number :: Num a => Parser a
-number = signed (return ()) decimal
+pNumber :: Num a => Parser a
+pNumber = signed (return ()) decimal
 
 -- | Parser for a single digit number, without sign.
 -- | Consumes no white space

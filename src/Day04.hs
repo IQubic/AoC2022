@@ -23,15 +23,15 @@ getAns :: (IntegerInterval -> IntegerInterval -> Bool)
 getAns p = countIf (uncurry p)
          . parseInput
 
-parseInput :: String -> [(IntegerInterval, IntegerInterval)]
-parseInput = parseLines $ do
+pInput :: String -> [(IntegerInterval, IntegerInterval)]
+pInput = pLines $ do
   first <- pRange <* char ','
   (first,) <$> pRange
     where
       pRange :: Parser IntegerInterval
       pRange = do
-        first <- number <* char '-'
-        second <- number
+        first <- pNumber <* char '-'
+        second <- pNumber
         pure $ I.Finite first <=..<= I.Finite second
 
 solve :: Show a => (String -> a) -> IO (Either AoCError a)
