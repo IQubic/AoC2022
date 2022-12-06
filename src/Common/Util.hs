@@ -219,8 +219,8 @@ minimumMaybe xs
 
 -- | Returns the last value for which a @Just@ result was given.
 -- This is an infinite loop if no @Just@ is ever produced.
-loopMaybe :: (a -> Maybe a) -> a -> a
-loopMaybe f = go
+lastJust :: (a -> Maybe a) -> a -> a
+lastJust f = go
   where
     go !x = case f x of
               Nothing -> x
@@ -248,7 +248,7 @@ strictIterate f = go
 
 -- | Strict (!!)
 (!!!) :: [a] -> Int -> a
-[] !!! _ = error "Out of range"
+[]     !!! _ = error "Out of range"
 (x:_)  !!! 0 = x
 (x:xs) !!! n = x `seq` (xs !!! (n - 1))
 
