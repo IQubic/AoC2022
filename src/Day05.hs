@@ -32,7 +32,6 @@ move :: (String -> String)
 move f crates (n, from, to) = let (top, bot) = splitAt n (crates IM.! from) in
   IM.adjust (f top ++) to $ IM.insert from bot crates
 
-
 type Move     = (Int, Int, Int)
 type CrateMap = IntMap String
 
