@@ -7,8 +7,8 @@ import Common.Parser
 import Data.List (transpose)
 import Data.Maybe (catMaybes)
 import Data.Foldable (asum, foldl')
-import Data.Map.Strict (Map)
-import Data.Map.Strict qualified as M
+import Data.IntMap.Strict (IntMap)
+import Data.IntMap.Strict qualified as IM
 
 part1 :: String -> String
 part1 = getAns reverse
@@ -20,7 +20,7 @@ getAns :: (String -> String)
        -> String
        -> String
 getAns f i = map head
-           $ M.elems
+           $ IM.elems
            $ foldl' (move f) crateInit moves
   where
     (crateInit, moves) = pInput i
@@ -29,19 +29,19 @@ move :: (String -> String)
      -> CrateMap
      -> Move
      -> CrateMap
-move f crates (n, from, to) = let (top, bot) = splitAt n (crates M.! from) in
-  M.adjust (f top ++) to $ M.insert from bot crates
+move f crates (n, from, to) = let (top, bot) = splitAt n (crates IM.! from) in
+  IM.adjust (f top ++) to $ IM.insert from bot crates
 
 
 type Move     = (Int, Int, Int)
-type CrateMap = Map Int String
+type CrateMap = IntMap String
 
 pInput :: String -> (CrateMap, [Move])
 pInput = pAll $ do
   ascii  <- (pCell `sepBy1` char ' ') `sepEndBy1` eol
   labels <- pLine (hspace *> (pNumber `endBy1` hspace)) <* eol
   moves  <- pMove `endBy1` eol
-  let crates = M.fromList $ zip labels $ map catMaybes $ transpose ascii
+  let crates = IM.fromList $ zip labels $ map catMaybes $ transpose ascii
   pure (crates, moves)
   where
     pCell :: Parser (Maybe Char)
