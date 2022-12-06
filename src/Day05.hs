@@ -4,11 +4,11 @@ module Day05 where
 
 import Common.Runner
 import Common.Parser
+import Data.List (transpose)
+import Data.Maybe (catMaybes)
+import Data.Foldable (asum, foldl')
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
-import Data.Foldable (foldl')
-
-import System.IO
 
 part1 :: String -> String
 part1 = getAns reverse
@@ -21,51 +21,39 @@ getAns :: (String -> String)
        -> String
 getAns f i = map head
            $ M.elems
-           $ foldl' (move f) cratesInit moves
+           $ foldl' (move f) crateInit moves
   where
-    moves = parseMoves i
+    (crateInit, moves) = pInput i
 
 move :: (String -> String)
-     -> Map Int String
+     -> CrateMap
      -> Move
-     -> Map Int String
+     -> CrateMap
 move f crates (n, from, to) = let (top, bot) = splitAt n (crates M.! from) in
   M.adjust (f top ++) to $ M.insert from bot crates
 
-cratesInit :: Map Int String
-cratesInit = M.fromList $ zip [1..]
-           [ "TZB"
-           , "NDTHV"
-           , "DMFB"
-           , "LQVWGJT"
-           , "MQFVPGDW"
-           , "SFHGQZV"
-           , "WCTLRNSZ"
-           , "MRNJDWHZ"
-           , "SDFLQM"
-           ]
 
-type Move = (Int, Int, Int)
+type Move     = (Int, Int, Int)
+type CrateMap = Map Int String
 
--- TODO Write Full Parser
-parseMoves :: String -> [Move]
-parseMoves = parseAll $ do
-  pMove `endBy1` eol
+pInput :: String -> (CrateMap, [Move])
+pInput = pAll $ do
+  ascii  <- (pCell `sepBy1` char ' ') `sepEndBy1` eol
+  labels <- pLine (hspace *> (pNumber `endBy1` hspace)) <* eol
+  moves  <- pMove `endBy1` eol
+  let crates = M.fromList $ zip labels $ map catMaybes $ transpose ascii
+  pure (crates, moves)
   where
+    pCell :: Parser (Maybe Char)
+    pCell = asum [ Just    <$> between (char '[') (char ']') anySingle
+                 , Nothing <$  string "   "
+                 ]
     pMove :: Parser Move
     pMove = do
-      n    <- string "move "  *> number
-      from <- string " from " *> number
-      to   <- string " to "   *> number
+      n    <- string "move "  *> pNumber
+      from <- string " from " *> pNumber
+      to   <- string " to "   *> pNumber
       pure (n, from, to)
 
--- TODO Use actual Parser
--- Day05.txt is the moves only
-solve :: Show a => (String -> a) -> IO ()
-solve f = do
-  handle <- openFile "/home/avi/hs/aoc22/src/Day05.txt" ReadMode
-  contents <- hGetContents handle
-  print $ f contents
-
--- solve :: Show a => (String -> a) -> IO (Either AoCError a)
--- solve = runSolutionOnInput 5
+solve :: Show a => (String -> a) -> IO (Either AoCError a)
+solve = runSolutionOnInput 5
