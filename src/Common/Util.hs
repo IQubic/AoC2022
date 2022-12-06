@@ -232,7 +232,7 @@ firstDup = firstDupBy id
 
 -- | Finds the first repeated element in the list
 -- Uses a projection function to get only relevent info for comparison
-firstDupBy :: Ord a => (b -> a) -> [b] -> Maybe b
+firstDupBy :: Ord b => (a -> b) -> [a] -> Maybe a
 firstDupBy f = go S.empty
   where
     go seen (x:xs)
