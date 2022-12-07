@@ -7,10 +7,9 @@ import Common.Runner
 import Common.Parser
 import Data.Foldable (asum)
 import Data.Char (isSpace)
-import Data.List (inits)
+import Data.List (tails)
 import Data.Map (Map)
 import Data.Map qualified as M
-
 
 part1 :: String -> Int
 part1 i = sum [n | n <- M.elems sizes, n <= 100_000]
@@ -21,20 +20,21 @@ part2 :: String -> Int
 part2 i = minimum [n | n <- M.elems sizes, n >= required]
   where
     sizes = dirSizes $ pInput i
-    free = 70_000_000 - sizes M.! ["/"]
+    free = 70_000_000 - sizes M.! []
     required = 30_000_000 - free
 
 -- Get the size of each dir
 -- files in /foo/bar add to the size of /, /foo, and /foo/bar
 dirSizes :: [TermCmd] -> Map Path Int
-dirSizes xs = M.fromListWith (+) [(d',n) | (d,n) <- go [] xs, d' <- inits d]
+dirSizes xs = M.fromListWith (+) [(d',n) | (d,n) <- go [] xs, d' <- tails d]
   where
     -- go gets the size of all the files (not dirs) at each level
+    -- Storing parent dir as tail makes things faster
     go :: Path -> [TermCmd] -> [(Path, Int)]
     go _   []              = []
-    go _   (CD "/"   : xs) = go ["/"] xs
-    go cwd (CD ".."  : xs) = go (init cwd) xs
-    go cwd (CD dir   : xs) = go (cwd ++ [dir]) xs
+    go _   (CD "/"   : xs) = go [] xs
+    go cwd (CD ".."  : xs) = go (drop 1 cwd) xs
+    go cwd (CD dir   : xs) = go (dir : cwd) xs
     go cwd (LS files : xs) = (cwd, sum [n | (File n) <- files]) : go cwd xs
 
 type Path = [String]
