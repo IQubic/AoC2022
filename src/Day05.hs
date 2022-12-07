@@ -38,7 +38,7 @@ type CrateMap = IntMap String
 pInput :: String -> (CrateMap, [Move])
 pInput = pAll $ do
   ascii  <- (pCell `sepBy1` char ' ') `sepEndBy1` eol
-  labels <- pLine (hspace *> (pNumber `endBy1` hspace)) <* eol
+  labels <- (hspace *> (pNumber `endBy1` hspace)) <* eol <* eol
   moves  <- pMove `endBy1` eol
   let crates = IM.fromList $ zip labels $ map catMaybes $ transpose ascii
   pure (crates, moves)

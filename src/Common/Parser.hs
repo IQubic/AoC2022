@@ -25,18 +25,13 @@ coerceParseResult = either (error . errorBundlePretty) id
 -- Calls @error@ on a parse error.
 pAll :: Parser a -> String -> a
 pAll p input = coerceParseResult
-                 $ runParser (p <* eof) "" input
+             $ runParser (p <* eof) "" input
 
 -- | Parser for all lines. Runs a given parser on each line.
 -- Requires that the user DOES NOT consume newlines.
 -- Calls @error@ on a parse error.
 pLines :: Parser a -> String -> [a]
 pLines p = pAll (p `endBy`eol)
-
--- | Parser for a single line.
--- Requires that the user DOES NOT consume the newline.
-pLine :: Parser a -> Parser a
-pLine p = p <* eol
 
 -- | Parser for comma separated list of data.
 -- | Consumes whitespace between elements
