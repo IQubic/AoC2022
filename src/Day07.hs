@@ -35,17 +35,18 @@ dirSizes xs = M.fromListWith (+) [(d',n) | (d,n) <- go [] xs, d' <- inits d]
     go _   (CD "/"   : xs) = go ["/"] xs
     go cwd (CD ".."  : xs) = go (init cwd) xs
     go cwd (CD dir   : xs) = go (cwd ++ [dir]) xs
-    go cwd (LS files : xs) = (cwd, sum [n | (File n _) <- files]) : go cwd xs
+    go cwd (LS files : xs) = (cwd, sum [n | (File n) <- files]) : go cwd xs
 
 type Path = [String]
+-- TermCmd is a command + output
 data TermCmd = CD String
              | LS [LSOutput]
              deriving Show
-data LSOutput = File Int String
+-- File names aren't stored, as they aren't used
+data LSOutput = File Int
               | Dir String
               deriving Show
 
--- Create a list of term commands, which contain output
 pInput :: String -> [TermCmd]
 pInput = pAll $ many $ asum [pCD, pLS]
   where
@@ -57,7 +58,7 @@ pInput = pAll $ many $ asum [pCD, pLS]
       LS <$> asum [pDir, pFile] `sepEndBy1` eol
     pFile = do
       size <- pNumber <* spaceChar
-      File size <$> pID
+      File size <$ pID
     pDir = Dir <$> (string "dir " *> pID)
     pID :: Parser String
     pID = some $ satisfy (not . isSpace)
