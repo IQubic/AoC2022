@@ -5,6 +5,7 @@ module Day07 where
 
 import Common.Runner
 import Common.Parser
+import Common.Util (sumIf, minimumIf)
 import Data.Foldable (asum)
 import Data.Char (isSpace)
 import Data.List (tails)
@@ -12,12 +13,13 @@ import Data.Map (Map)
 import Data.Map qualified as M
 
 part1 :: String -> Int
-part1 i = sum [n | n <- M.elems sizes, n <= 100_000]
+part1 i = sumIf (<= 100_000) $ M.elems sizes
+-- [n | n <- M.elems sizes, n <= 100_000]
   where
     sizes = dirSizes $ pInput i
 
 part2 :: String -> Int
-part2 i = minimum [n | n <- M.elems sizes, n >= required]
+part2 i = minimumIf (>= required) $ M.elems sizes
   where
     sizes = dirSizes $ pInput i
     free = 70_000_000 - sizes M.! []

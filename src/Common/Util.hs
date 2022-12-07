@@ -7,6 +7,7 @@ module Common.Util ( module Common.Util
                    ) where
 import Data.List
 import Data.Maybe (mapMaybe)
+import Data.Semigroup (Max(..), Min(..))
 import Data.Monoid
 import Data.Foldable
 import Data.Traversable
@@ -50,7 +51,12 @@ sumIf = foldMapIf (coerced :: Iso' a (Sum a))
 -- | Computes the product of all the elements that satisfy a given predicate.
 productIf :: (Foldable t, Num a) => (a -> Bool) -> t a -> a
 productIf = foldMapIf (coerced :: Iso' a (Product a))
-
+-- | Computes the maximum of all the elements that satisfy a given predicate.
+maximumIf :: (Foldable t, Ord a, Bounded a) => (a -> Bool) -> t a -> a
+maximumIf = foldMapIf $ iso Max getMax
+-- | Computes the minimum of all the elements that satisfy a given predicate.
+minimumIf :: (Foldable t, Ord a, Bounded a) => (a -> Bool) -> t a -> a
+minimumIf = foldMapIf $ iso Min getMin
 -- | Mappends all elements that satisfy a predicate
 foldIf :: (Foldable t, Monoid m) => (m -> Bool) -> t m -> m
 foldIf = foldMapIf id
