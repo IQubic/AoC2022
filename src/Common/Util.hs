@@ -257,3 +257,8 @@ times :: Int -> (a -> a) -> a -> a
 times n f x
   | n <= 0    = x
   | otherwise = times (n-1) f $! f x
+
+-- | Gives head, or a default value
+headOr :: a -> [a] -> a
+headOr def []    = def
+headOr _   (x:_) = x
