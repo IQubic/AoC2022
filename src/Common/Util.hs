@@ -35,7 +35,7 @@ moeb f x = let go = f ($ go) x in go
 
 -- | Composes all functions in a list from left to right.
 composeAll :: Foldable f => f (a -> a) -> a -> a
-composeAll = appEndo . foldMap Endo
+composeAll = appEndo . getDual . foldMap (Dual . Endo)
 
 -- | Checks if a given value is still in the list after running a filter.
 elemIf :: (Foldable t, Eq a) => (a -> Bool) -> a -> t a -> Bool
