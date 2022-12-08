@@ -211,7 +211,7 @@ displayAsciiSet
 displayAsciiSet missing here =
   displayAsciiMap missing . M.fromSet (const here)
 
--- | Returns @'V2' (V2 xMin yMin) (V2 xMax yMax)@.
+-- | Returns @((V2 xMin yMin), (V2 xMax yMax))@.
 boundingBox :: (Applicative f, Ord a) => Set (f a) -> (f a, f a)
 boundingBox (IsNonEmpty g) = unpack $ foldMap1 pack g
   where
@@ -252,6 +252,16 @@ lineBetween p0 p1 = [p0 + t *^ step | t <- [0 .. gcf]]
     d@(V2 dx dy) = p1 - p0
     gcf          = gcd dx dy
     step         = (`div` gcf) <$> d
+
+-- | Returns an infinite ray of points, including the starting point
+-- North is (0,1) here
+lineFrom :: Point -> Dir -> [Point]
+lineFrom p d = iterate (+ dirPoint d) p
+
+-- | Returns an infinite ray of points, including the starting point
+-- North is (0,-1) here
+lineFrom' :: Point -> Dir -> [Point]
+lineFrom' p d = iterate (+ dirPoint' d) p
 
 -- -- | Do ocr on a grid in a Map format.
 -- -- A Just means that least 50% of letter forms are recognized.
