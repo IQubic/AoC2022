@@ -30,6 +30,7 @@ import qualified Data.Map.Strict as M
 import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Containers.NonEmpty
+import Data.Maybe (fromJust)
 
 -- LATTICE POINTS
 type Point = V2 Int
@@ -47,15 +48,15 @@ fullNeighbors
   :: (Applicative f, Traversable f, Num (f a), Num a, Eq (f a))
   => f a
   -> [f a]
-fullNeighbors p =
-    [ p + d
+fullNeighbors pt =
+    [ pt + d
     | d <- sequenceA (pure [-1,0,1])
     , d /= pure 0
     ]
 
 -- | Computes the Manhattan distance between two N-dimensional points.
 manhattan :: (Foldable f, Num (f a), Num a) => f a -> f a -> a
-manhattan p1 p2 = sum $ abs (p1 - p2)
+manhattan pt1 pt2 = sum $ abs (pt1 - pt2)
 
 -- CARDINAL DIRECTIONS
 -- | Cardinal directions
@@ -91,7 +92,7 @@ rotPoint South (V2 x y) = V2 (-x) (-y)
 
 -- | Rotates a point using a given direction
 rotFin :: forall n. KnownNat n => Dir -> FinPoint n -> FinPoint n
-rotFin d = over (mapping centeredFinite) (rotPoint d)
+rotFin dir = over (mapping centeredFinite) (rotPoint dir)
 
 -- | An Iso from a Finite N to a Rational
 -- This is just the same number shifted so the center lies at the origin
@@ -103,10 +104,10 @@ centeredFinite = iso (subtract r . (% 1) . getFinite)
 
 -- | @<>@ performs a rotation.
 instance Semigroup Dir where
-  North <> d     = d
-  d     <> North = d
-  South <> d     = invert d
-  d     <> South = invert d
+  North <> dir   = dir
+  dir   <> North = dir
+  South <> dir   = invert dir
+  dir   <> South = invert dir
   East  <> East  = South
   East  <> West  = North
   West  <> East  = North
@@ -160,7 +161,7 @@ orientPoint (D4 South True)  (V2 x y) = V2   x  (-y)
 
 -- | Orients a point by a @D4@
 orientFin :: KnownNat n => D4 -> FinPoint n -> FinPoint n
-orientFin d = over (mapping centeredFinite) (orientPoint d)
+orientFin dir = over (mapping centeredFinite) (orientPoint dir)
 
 -- 2D GRIDS
 -- | Creates a sparse map representing a 2D square grid from a String
@@ -195,12 +196,12 @@ displayAsciiMap
     :: Char             -- ^ missing char
     -> Map Point Char   -- ^ tile map
     -> String
-displayAsciiMap missing m = unlines
-    [ [ M.findWithDefault missing (V2 x y) m
+displayAsciiMap missing grid = unlines
+    [ [ M.findWithDefault missing (V2 x y) grid
       | x <- [xMin .. xMax]]
     | y <- [yMin .. yMax]]
   where
-    (V2 xMin yMin, V2 xMax yMax) = boundingBox $ M.keysSet m
+    (V2 xMin yMin, V2 xMax yMax) = boundingBox grid
 
 -- | Displays a Set of Points as a String
 displayAsciiSet
@@ -212,12 +213,9 @@ displayAsciiSet missing here =
   displayAsciiMap missing . M.fromSet (const here)
 
 -- | Returns @((V2 xMin yMin), (V2 xMax yMax))@.
-boundingBox :: (Applicative f, Ord a) => Set (f a) -> (f a, f a)
-boundingBox (IsNonEmpty g) = unpack $ foldMap1 pack g
-  where
-    pack p = T2 (Ap (Min <$> p)) (Ap (Max <$> p))
-    unpack (T2 (Ap mn) (Ap mx)) = (getMin <$> mn, getMax <$> mx)
-boundingBox _ = error "Empty Grid"
+boundingBox :: (Applicative f, Ord a) => Map (f a) b -> (f a, f a)
+boundingBox grid = let pts = M.keysSet grid in
+  (minCorner pts, maxCorner pts)
 
 -- | Checks if a point is in a bounding box
 inBoundingBox
@@ -225,43 +223,50 @@ inBoundingBox
     => (f a, f a)
     -> f a
     -> Bool
-inBoundingBox (mn, mx) p = and $ check <$> p <*> mn <*> mx
+inBoundingBox (mn, mx) pt = and $ check <$> pt <*> mn <*> mx
   where
-    check p' min' max' = min' <= p' && p' <= max'
+    check pt' min' max' = min' <= pt' && pt' <= max'
+
+-- | Returns the maximum corner of a grid
+-- | Only works on non-empty grids
+maxCorner :: (Applicative f, Ord a) => Set (f a) -> f a
+maxCorner grid = case S.lookupMax grid of
+                   Nothing  -> error "maxCorner: Error empty grid"
+                   Just max -> max
 
 -- | Returns the minimum corner of a grid
--- | Only works on structures with data
+-- | Only works on non-empty grids
 minCorner :: (Applicative f, Ord a) => Set (f a) -> f a
-minCorner (IsNonEmpty g) =
-  fmap getMin $ getAp $ foldMap1 (Ap . fmap Min) g
-minCorner _ = error "Empty Grid"
+minCorner grid = case S.lookupMin grid of
+                   Nothing  -> error "minCorner: Error empty grid"
+                   Just min -> min
 
 -- | Shift corner to (0,0)
 -- | Works with possibly empty sets
 shiftToZero
     :: (Applicative f, Num (f a), Ord a)
     => Set (f a) -> Set (f a)
-shiftToZero g
-  | S.null g = S.mapMonotonic (subtract $ minCorner g) g
-  | otherwise = g
+shiftToZero grid
+  | S.null grid = S.mapMonotonic (subtract $ minCorner grid) grid
+  | otherwise = grid
 
 -- | Returns all the lattice points between the given endpoints
 lineBetween :: Point -> Point -> [Point]
-lineBetween p0 p1 = [p0 + t *^ step | t <- [0 .. gcf]]
+lineBetween pt0 pt1 = [pt0 + t *^ step | t <- [0 .. gcf]]
   where
-    d@(V2 dx dy) = p1 - p0
+    d@(V2 dx dy) = pt1 - pt0
     gcf          = gcd dx dy
     step         = (`div` gcf) <$> d
 
 -- | Returns an infinite ray of points, including the starting point
 -- North is (0,1) here
 lineFrom :: Point -> Dir -> [Point]
-lineFrom p d = iterate (+ dirPoint d) p
+lineFrom pt dir = iterate (+ dirPoint dir) pt
 
 -- | Returns an infinite ray of points, including the starting point
 -- North is (0,-1) here
 lineFrom' :: Point -> Dir -> [Point]
-lineFrom' p d = iterate (+ dirPoint' d) p
+lineFrom' pt dir = iterate (+ dirPoint' dir) pt
 
 -- -- | Do ocr on a grid in a Map format.
 -- -- A Just means that least 50% of letter forms are recognized.
