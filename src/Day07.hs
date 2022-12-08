@@ -30,7 +30,7 @@ part2 i = minimumIf (>= required) $ M.elems sizes
 dirSizes :: [TermCmd] -> Map Path Int
 dirSizes xs = M.fromListWith (+) [(d',n) | (d,n) <- go [] xs, d' <- tails d]
   where
-    -- go gets the size of all the files (not dirs) at each level
+    -- Helper to get the size of all the files (not dirs) at each level
     -- Storing parent dir as tail makes things faster
     go :: Path -> [TermCmd] -> [(Path, Int)]
     go _   []              = []
