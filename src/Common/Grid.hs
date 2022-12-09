@@ -1,3 +1,4 @@
+{-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -25,11 +26,14 @@ import Data.Finite
 import GHC.TypeNats
 import Data.Ratio
 import Data.Proxy
+import Data.Containers.NonEmpty
+import Data.Maybe (fromJust)
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 import Data.Set (Set)
 import qualified Data.Set as S
-import Data.Maybe (fromJust)
+import Data.Array.IArray qualified as A
+import Data.Array.IArray (Array)
 
 -- LATTICE POINTS
 type Point = V2 Int
@@ -48,9 +52,9 @@ fullNeighbors
   => f a
   -> [f a]
 fullNeighbors pt =
-    [ pt + d
-    | d <- sequenceA (pure [-1,0,1])
-    , d /= pure 0
+    [ pt + dir
+    | dir <- sequenceA (pure [-1,0,1])
+    , dir /= pure 0
     ]
 
 -- | Computes the Manhattan distance between two N-dimensional points.
@@ -163,22 +167,35 @@ orientFin :: KnownNat n => D4 -> FinPoint n -> FinPoint n
 orientFin dir = over (mapping centeredFinite) (orientPoint dir)
 
 -- 2D GRIDS
--- | Creates a sparse map representing a 2D square grid from a String
+-- | Creates an array representing a 2D grid from a String
+-- Requires newlines between the rows of the grid
+asciiGridArray
+  :: Num n
+  => (Char -> a)
+  -> String
+  -> Array Point a
+asciiGridArray f str = A.listArray (0, V2 maxX maxY) (concat rows)
+  where
+    maxX = length rows - 1
+    maxY = length (head rows) - 1
+    rows = map (map f) $ lines str
+
+-- | Creates a map representing a 2D grid from a String
 -- Requires newlines between the rows of the grid
 asciiGridMap
-    :: (Num n, Ord n)
-    => (Char -> Maybe a)
-    -> String
-    -> Map (V2 n) a
+  :: (Num n, Ord n)
+  => (Char -> Maybe a)
+  -> String
+  -> Map (V2 n) a
 asciiGridMap f = toMapOf (gridTraverse <. folding f) . lines
 
--- | Creates a set representing a 2D square grid from a String
+-- | Creates a set representing a 2D grid from a String
 -- Requires newlines between the rows of the grid
 asciiGridSet
-    :: (Num n, Ord n)
-    => (Char -> Bool)
-    -> String
-    -> Set (V2 n)
+  :: (Num n, Ord n)
+  => (Char -> Bool)
+  -> String
+  -> Set (V2 n)
 asciiGridSet f = setOf (gridTraverse . filtered f . asIndex) . lines
 
 -- | An Indexed Traversal over the elements of a 2D structure
@@ -200,7 +217,7 @@ displayAsciiMap missing grid = unlines
       | x <- [xMin .. xMax]]
     | y <- [yMin .. yMax]]
   where
-    (V2 xMin yMin, V2 xMax yMax) = boundingBox grid
+    (V2 xMin yMin, V2 xMax yMax) = boundingBox $ M.keysSet grid
 
 -- | Displays a Set of Points as a String
 displayAsciiSet
@@ -212,9 +229,12 @@ displayAsciiSet missing here =
   displayAsciiMap missing . M.fromSet (const here)
 
 -- | Returns @((V2 xMin yMin), (V2 xMax yMax))@.
-boundingBox :: (Applicative f, Ord a) => Map (f a) b -> (f a, f a)
-boundingBox grid = let pts = M.keysSet grid in
-  (minCorner pts, maxCorner pts)
+boundingBox :: (Applicative f, Ord a) => Set (f a) -> (f a, f a)
+boundingBox (IsNonEmpty g) = unpack $ foldMap1 pack g
+  where
+    pack p = T2 (Ap (Min <$> p)) (Ap (Max <$> p))
+    unpack (T2 (Ap mn) (Ap mx)) = (getMin <$> mn, getMax <$> mx)
+boundingBox _ = error "Empty Grid"
 
 -- | Checks if a point is in a bounding box
 inBoundingBox
@@ -226,18 +246,18 @@ inBoundingBox (mn, mx) pt = and $ check <$> pt <*> mn <*> mx
   where
     check pt' min' max' = min' <= pt' && pt' <= max'
 
--- | Returns the maximum corner of a grid
--- | Only works on non-empty grids
-maxCorner :: (Applicative f, Ord a) => Set (f a) -> f a
-maxCorner grid = case S.lookupMax grid of
-                   Nothing  -> error "maxCorner: Error empty grid"
-                   Just max -> max
-
 -- | Returns the minimum corner of a grid
 -- | Only works on non-empty grids
 minCorner :: (Applicative f, Ord a) => Set (f a) -> f a
 minCorner grid = case S.lookupMin grid of
                    Nothing  -> error "minCorner: Error empty grid"
+                   Just min -> min
+
+-- | Returns the maximum corner of a grid
+-- | Only works on non-empty grids
+maxCorner :: (Applicative f, Ord a) => Set (f a) -> f a
+maxCorner grid = case S.lookupMax grid of
+                   Nothing  -> error "maxCorner: Error empty grid"
                    Just min -> min
 
 -- | Shift corner to (0,0)
@@ -253,9 +273,9 @@ shiftToZero grid
 lineBetween :: Point -> Point -> [Point]
 lineBetween pt0 pt1 = [pt0 + t *^ step | t <- [0 .. gcf]]
   where
-    d@(V2 dx dy) = pt1 - pt0
+    diff@(V2 dx dy) = pt1 - pt0
     gcf          = gcd dx dy
-    step         = (`div` gcf) <$> d
+    step         = (`div` gcf) <$> diff
 
 -- | Returns an infinite ray of points, including the starting point
 -- North is (0,1) here

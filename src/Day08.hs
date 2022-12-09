@@ -18,7 +18,7 @@ part1 :: String -> Int
 part1 i = countIf visible $ range bounds
   where
     grid = pInput i
-    bounds = boundingBox grid
+    bounds = boundingBox $ M.keysSet grid
     -- Get the height of tree at a given point
     getHeight pt = grid M.!? pt
     -- Is this tree visible at all?
@@ -32,7 +32,7 @@ part2 :: String -> Int
 part2 i = maximum $ map scenicScore $ range bounds
   where
     grid = pInput i
-    bounds = boundingBox grid
+    bounds = boundingBox $ M.keysSet grid
     -- Get the height of tree at a given point
     getHeight pt = grid M.!? pt
     scenicScore :: Point -> Int
