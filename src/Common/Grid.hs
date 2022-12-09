@@ -62,6 +62,10 @@ fullNeighbors pt =
 manhattan :: (Foldable f, Num (f a), Num a) => f a -> f a -> a
 manhattan pt1 pt2 = sum $ abs (pt1 - pt2)
 
+-- | Computes the Cheybshev distance between two N-dimensional points.
+chebyshev :: (Foldable f, Num (f a), Num a, Ord a) => f a -> f a -> a
+chebyshev pt1 pt2 = maximum $ abs (pt1 - pt2)
+
 -- CARDINAL DIRECTIONS
 -- | Cardinal directions
 data Dir = North | East | South | West
