@@ -24,6 +24,7 @@ import Data.Monoid
 import Data.Group
 import Data.Finite
 import GHC.TypeNats
+import Data.List (transpose)
 import Data.Ratio
 import Data.Proxy
 import Data.Containers.NonEmpty
@@ -174,7 +175,8 @@ asciiGridArray
   => (Char -> a)
   -> String
   -> Array Point a
-asciiGridArray f str = A.listArray (0, V2 maxX maxY) (concat rows)
+asciiGridArray f str = A.listArray (0, V2 maxX maxY)
+                     $ concat $ transpose rows
   where
     maxX = length rows - 1
     maxY = length (head rows) - 1
@@ -248,14 +250,14 @@ inBoundingBox (mn, mx) pt = and $ check <$> pt <*> mn <*> mx
 
 -- | Returns the minimum corner of a grid
 -- | Only works on non-empty grids
-minCorner :: (Applicative f, Ord a) => Set (f a) -> f a
+minCorner :: Set (f a) -> f a
 minCorner grid = case S.lookupMin grid of
                    Nothing  -> error "minCorner: Error empty grid"
                    Just min -> min
 
 -- | Returns the maximum corner of a grid
 -- | Only works on non-empty grids
-maxCorner :: (Applicative f, Ord a) => Set (f a) -> f a
+maxCorner :: Set (f a) -> f a
 maxCorner grid = case S.lookupMax grid of
                    Nothing  -> error "maxCorner: Error empty grid"
                    Just min -> min
