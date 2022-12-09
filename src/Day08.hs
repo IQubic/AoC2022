@@ -56,7 +56,7 @@ sightLines bounds pt = map lineToEdge allDirs
     -- Get a list all points from here to the edge
     -- incluing the initial point
     lineToEdge :: Dir -> [Point]
-    lineToEdge = takeWhile (inRange bounds) . lineFrom pt
+    lineToEdge = takeWhile (inRange bounds) . lineFrom' pt
 
 pInput :: String -> Map Point Int
 pInput = asciiGridMap (Just . digitToInt)
