@@ -80,8 +80,8 @@ pInput = IM.fromList . pAll (pMonkey `sepBy1` eol)
       rhs <- asum [string "old" $> Nothing, Just <$> pNumber]
       pure $ eval op rhs
     eval :: Char -> Maybe Int -> (Int -> Int)
-    eval '*' (Just n) x  = x * n
-    eval '+' (Just n) x  = x + n
+    eval '*' (Just n) x = x * n
+    eval '+' (Just n) x = x + n
     eval '*' Nothing  x = x * x
     eval '+' Nothing  x = x + x
     eval op _ _ = error ("Unexpected operation: " ++ [op])
