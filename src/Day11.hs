@@ -7,12 +7,10 @@ import Common.Runner
 import Common.Parser
 import Common.Util (times)
 import Data.Foldable (asum)
-import Data.List (sortOn)
+import Data.List (sortOn, partition)
 import Data.Ord (Down(..))
-import Data.Sequence (Seq(..))
-import Data.Sequence qualified as S
-import Data.IntMap (IntMap)
-import Data.IntMap qualified as IM
+import Data.IntMap.Strict (IntMap)
+import Data.IntMap.Strict qualified as IM
 
 part1 :: String -> Int
 part1 = getAns 20 Nothing . pInput
@@ -37,32 +35,32 @@ runRound reducer ms = foldl (runMonkey reducer) ms (IM.keys ms)
 
 -- Run a single monkey
 runMonkey :: Maybe Int -> IntMap Monkey -> Int -> IntMap Monkey
-runMonkey reducer ms i =
-  let m = ms IM.! i in
+runMonkey reducer ms idx =
+  let m = ms IM.! idx in
     case items m of
-      Empty -> ms -- no more items
-      item :<| items' ->
-        let val = case reducer of Just modulus -> f m item `mod` modulus
-                                  Nothing      -> f m item `div` 3
-            target = if val `mod` test m == 0 then ifTrue m else ifFalse m
-        in
-        runMonkey reducer
-        (IM.adjust (push val) target $
-        IM.adjust (\x -> x{items = items', throws = throws m + 1}) i ms) i
+      [] -> ms -- no items
+      xs ->
+        let op = case reducer of Just modulus -> \item -> f m item `mod` modulus
+                                 Nothing      -> \item -> f m item `div` 3
+            (trues, falses) = partition (\item -> item `mod` test m == 0)
+                            $ map op $ items m -- Apply reducing function, and THEN test
+        in -- Append all trues and falses, clear current monkey's list, and update throws
+          IM.adjust (pushMany trues)  (ifTrue m) $
+          IM.adjust (pushMany falses) (ifFalse m) $
+          IM.adjust (\x -> x{items = [], throws = throws m + length (items m)}) idx ms
 
--- Push a single item to the back of a given monkey's queue
-push :: Int -> Monkey -> Monkey
-push x m = m {items =  items m S.|> x}
+-- Push many items to the list of a given monkey's items
+pushMany :: [Int] -> Monkey -> Monkey
+pushMany xs m = m {items = items m ++ xs}
 
--- What a monke is
-data Monkey = Monkey {
-  items :: Seq Int,
-  f :: Int -> Int,
-  test :: Int,
-  ifTrue :: Int,
-  ifFalse :: Int,
-  throws :: Int
-}
+-- What a monkey is
+data Monkey = Monkey { items :: [Int]
+                     , f :: Int -> Int
+                     , test :: Int
+                     , ifTrue :: Int
+                     , ifFalse :: Int
+                     , throws :: Int
+                     }
 
 pInput :: String -> IntMap Monkey
 pInput = IM.fromList . pAll (pMonkey `sepBy1` eol)
@@ -75,7 +73,7 @@ pInput = IM.fromList . pAll (pMonkey `sepBy1` eol)
       test <- pLine (hspace *> string "Test: divisible by " *> pNumber)
       ifTrue <- pLine (hspace *> string "If true: throw to monkey " *> pNumber)
       ifFalse <- pLine (hspace *> string "If false: throw to monkey " *> pNumber)
-      pure (n, Monkey (S.fromList items) op test ifTrue ifFalse 0)
+      pure (n, Monkey items op test ifTrue ifFalse 0)
     pOp :: Parser (Int -> Int)
     pOp = do
       op <- anySingle <* hspace
