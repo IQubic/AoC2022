@@ -33,6 +33,11 @@ pAll p input = coerceParseResult
 pLines :: Parser a -> String -> [a]
 pLines p = pAll (p `endBy`eol)
 
+-- | Parser for a single line.
+-- Requires that the user DOES NOT consume newlines.
+pLine :: Parser a -> Parser a
+pLine p = p <* eol
+
 -- | Parser for comma separated list of data.
 -- | Consumes whitespace between elements
 commaSep :: Parser a -> Parser [a]
