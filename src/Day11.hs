@@ -40,10 +40,10 @@ runMonkey reducer ms idx =
     case items m of
       [] -> ms -- no items
       xs ->
-        let op = case reducer of Just modulus -> \item -> f m item `mod` modulus
-                                 Nothing      -> \item -> f m item `div` 3
-            (trues, falses) = partition (\item -> item `mod` test m == 0)
-                            $ map op $ items m -- Apply reducing function, and THEN test
+        let op = maybe (`div` 3) (\modulus -> (`mod` modulus)) reducer
+            -- Apply reducing function, and THEN test
+            (trues, falses) = partition ((== 0) . (`mod` test m))
+                            $ map (op . f m) $ items m
         in -- Append all trues and falses, clear current monkey's list, and update throws
           IM.adjust (pushMany trues)  (ifTrue m) $
           IM.adjust (pushMany falses) (ifFalse m) $
