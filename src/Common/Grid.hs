@@ -33,8 +33,8 @@ import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as M
 import Data.Set (Set)
 import qualified Data.Set as S
-import Data.Array.IArray qualified as A
 import Data.Array.IArray (Array)
+import Data.Array.IArray qualified as A
 
 -- LATTICE POINTS
 type Point = V2 Int
@@ -182,8 +182,8 @@ asciiGridArray
 asciiGridArray f str = A.listArray (0, V2 maxX maxY)
                      $ concat $ transpose rows
   where
-    maxX = length rows - 1
-    maxY = length (head rows) - 1
+    maxX = length (head rows) - 1
+    maxY = length rows - 1
     rows = map (map f) $ lines str
 
 -- | Creates a map representing a 2D grid from a String
