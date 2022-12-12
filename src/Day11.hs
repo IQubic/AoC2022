@@ -18,7 +18,7 @@ part1 = getAns 20 Nothing . pInput
 part2 :: String -> Int
 part2 i = getAns 10_000 (Just reducer) ms
   where
-    reducer = foldl1 lcm $ map test $ IM.elems ms
+    reducer = foldl1 lcm $ IM.map test ms
     ms = pInput i
 
 getAns :: Int -> Maybe Int -> IntMap Monkey -> Int
@@ -53,7 +53,6 @@ runMonkey reducer ms idx =
 pushMany :: [Int] -> Monkey -> Monkey
 pushMany xs m = m {items = items m ++ xs}
 
--- What a monkey is
 data Monkey = Monkey { items :: [Int]
                      , f :: Int -> Int
                      , test :: Int
