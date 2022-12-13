@@ -7,7 +7,7 @@ import Data.Foldable (asum)
 import Data.List (sort)
 
 -- Numbering the packets before filtering
--- Allows us to keep the packet numbers after
+-- Allows us to access the original packet numbers after
 part1 :: String -> Int
 part1 = sum
       . map fst
