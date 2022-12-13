@@ -2,33 +2,26 @@ module Day13 where
 
 import Common.Runner
 import Common.Parser
-import Common.Util (pairs)
+import Common.Util (indexWhere)
 import Data.Foldable (asum)
-import Data.List (sort)
+import Data.List (sort, elemIndex)
+import Data.Maybe (fromJust)
 
--- Numbering the packets before filtering
--- Allows us to access the original packet numbers after
 part1 :: String -> Int
-part1 = sum
-      . map fst
-      . filter ((== LT) . uncurry compare . snd)
-      . zip [1..]
-      . pInput
+part1 i = sum [idx | (idx,(x,y)) <- zip [1..] (pInput i), x < y]
 
+-- Need to account for first packet having index 1
 part2 :: String -> Int
 part2 i = product
-        $ map fst
-        $ filter (isDecoder . snd)
-        $ zip [1..]
+        $ map (+1)
+        $ indicesWhere (`elem` extras)
         $ sort packets
   where
     -- All packets including decoder packets
     -- Also converts from the part 1 pair groupings to a flat list
     packets :: [Packet Int]
-    packets = [p2, p6] ++ concatMap (\(x, y) -> [x, y]) (pInput i)
-    isDecoder x = x == p2 || x == p6
-    p2 = Seq [Seq [Lit 2]]
-    p6 = Seq [Seq [Lit 6]]
+    packets = extras ++ concatMap (\(x, y) -> [x, y]) (pInput i)
+    extras = [ Seq [Seq [Lit n]] | n <- [2, 6] ]
 
 -- Recursive packets are FUN!!!
 data Packet a = Lit a | Seq [Packet a] deriving (Eq, Show)
@@ -54,8 +47,9 @@ pInput = pAll $ pPair `sepBy1` eol
       y <- pLine pPacket
       pure (x, y)
     pPacket :: Parser (Packet Int)
-    pPacket = Seq <$> between (char '[') (char ']') (commaSep pElem)
-    pElem = asum [Lit <$> pNumber, pPacket]
+    pPacket = asum [ Seq <$> between (char '[') (char ']') (commaSep pPacket)
+                   , Lit <$> pNumber
+                   ]
 
 solve :: Show a => (String -> a) -> IO (Either AoCError a)
 solve = runSolutionOnInput 13
