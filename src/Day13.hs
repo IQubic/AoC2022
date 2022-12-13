@@ -2,7 +2,7 @@ module Day13 where
 
 import Common.Runner
 import Common.Parser
-import Common.Util (indexWhere)
+import Common.Util (indicesWhere)
 import Data.Foldable (asum)
 import Data.List (sort, elemIndex)
 import Data.Maybe (fromJust)
