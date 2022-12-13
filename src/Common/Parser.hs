@@ -31,7 +31,7 @@ pAll p input = coerceParseResult
 -- Requires that the user DOES NOT consume newlines.
 -- Calls @error@ on a parse error.
 pLines :: Parser a -> String -> [a]
-pLines p = pAll (p `endBy`eol)
+pLines p = pAll (p `endBy` eol)
 
 -- | Parser for a single line.
 -- Requires that the user DOES NOT consume newlines.
@@ -41,7 +41,7 @@ pLine p = p <* eol
 -- | Parser for comma separated list of data.
 -- | Consumes whitespace between elements
 commaSep :: Parser a -> Parser [a]
-commaSep p = p `sepBy1` (char ',' *> hspace)
+commaSep p = p `sepBy` (char ',' *> hspace)
 
 -- | Parser for a possibly signed number of one or more digits.
 -- | Consumes all whitespace before the number

@@ -7,7 +7,7 @@ import Data.Foldable (asum)
 import Data.List (sort)
 
 -- Numbering the packets before filtering
--- Allows us to keep the packet numbers
+-- Allows us to keep the packet numbers after
 part1 :: String -> Int
 part1 = sum
       . map fst
@@ -30,9 +30,10 @@ part2 i = product
     p2 = Seq [Seq [Lit 2]]
     p6 = Seq [Seq [Lit 6]]
 
+-- Recursive packets are FUN!!!
 data Packet a = Lit a | Seq [Packet a] deriving (Eq, Show)
 
--- Mostly just a routine implemention of the rules
+-- Just a routine implemention of the rules
 instance Ord a => Ord (Packet a) where
   compare (Lit x) (Lit y)  = compare x y
   compare (Seq xs) (Lit y) = compare (Seq xs) (Seq [Lit y])
@@ -53,9 +54,7 @@ pInput = pAll $ pPair `sepBy1` eol
       y <- pLine pPacket
       pure (x, y)
     pPacket :: Parser (Packet Int)
-    pPacket = Seq <$> between (char '[') (char ']') pList
-    -- commaSep fails if given parser fails
-    pList = try (commaSep pElem) <|> pure []
+    pPacket = Seq <$> between (char '[') (char ']') (commaSep pElem)
     pElem = asum [Lit <$> pNumber, pPacket]
 
 solve :: Show a => (String -> a) -> IO (Either AoCError a)
