@@ -71,9 +71,9 @@ foldMapIf :: (Foldable t, Monoid m)
 foldMapIf _monoided p xs =
   _monoided # foldOf (folded . filtered p . _monoided) xs
 
--- | Gets the indicies of all elements satisfying the predicate
-indexWhere :: (Foldable f) => (a -> Bool) -> f a -> [Int]
-indexWhere p xs = xs ^.. folded . filtered p . asIndex
+-- | Gets the indices of all elements satisfying the predicate
+indicesWhere :: Foldable f => (a -> Bool) -> f a -> [Int]
+indicesWhere p xs = xs ^.. folded . filtered p . asIndex
 
 -- | Converts a given sequence of digits from base @n@ to base @10@
 baseConvert :: (Num n, Foldable f) => n -> f n -> n
